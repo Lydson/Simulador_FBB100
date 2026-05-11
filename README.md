@@ -1,4 +1,4 @@
-# 🎯 Simulador FBB100 & LGPD
+# 🎯 Simulador FBB100
 
 Um simulador web interativo e responsivo desenvolvido para auxiliar nos estudos da certificação **Febraban FBB100 (Correspondente Completo)** e na compreensão da **LGPD (Lei Geral de Proteção de Dados)** no setor financeiro.
 
