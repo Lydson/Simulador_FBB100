@@ -1,38 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  CheckCircle2,
+  CheckCircle,
   XCircle,
+  AlertCircle,
   BookOpen,
   Target,
   ArrowRight,
   RotateCcw,
   BarChart3,
   Clock,
-  Trophy,
-  Award,
+  LogOut,
 } from "lucide-react";
 import { questionBank, type Question } from "@/data/questions";
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  component: App,
 });
 
-type HistoryRecord = {
-  id: number;
-  date: string;
-  type: number;
-  score: number;
-  time: number;
-};
-
 function shuffleArray<T>(array: T[]): T[] {
-  const a = [...array];
-  for (let i = a.length - 1; i > 0; i--) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return a;
+  return shuffled;
 }
 
 const formatTime = (totalSeconds: number) => {
@@ -41,27 +33,26 @@ const formatTime = (totalSeconds: number) => {
   return `${m}:${s}`;
 };
 
-function Index() {
-  const [screen, setScreen] = useState<"home" | "exam" | "results">("home");
+type Screen = "home" | "exam" | "results";
+
+function App() {
+  const [screen, setScreen] = useState<Screen>("home");
   const [examQuestions, setExamQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
   const [showExplanation, setShowExplanation] = useState(false);
+
   const [elapsedTime, setElapsedTime] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
-  const [examHistory, setExamHistory] = useState<HistoryRecord[]>([]);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("fbb100_history");
-      if (saved) setExamHistory(JSON.parse(saved));
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    if (!timerActive || screen !== "exam") return;
-    const id = setInterval(() => setElapsedTime((p) => p + 1), 1000);
-    return () => clearInterval(id);
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (timerActive && screen === "exam") {
+      interval = setInterval(() => setElapsedTime((p) => p + 1), 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [timerActive, screen]);
 
   const startExam = (count: number) => {
@@ -74,365 +65,392 @@ function Index() {
     setScreen("exam");
   };
 
-  const handleSelectOption = (idx: number) => {
+  const handleSelectOption = (optionIndex: number) => {
     if (showExplanation) return;
-    setUserAnswers({ ...userAnswers, [currentQuestionIndex]: idx });
-  };
-
-  const finishExam = () => {
-    setTimerActive(false);
-    let correct = 0;
-    examQuestions.forEach((q, idx) => {
-      if (userAnswers[idx] === q.correctIndex) correct++;
-    });
-    const percentage = Math.round((correct / examQuestions.length) * 100);
-    const newRecord: HistoryRecord = {
-      id: Date.now(),
-      date: new Date().toLocaleString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      type: examQuestions.length,
-      score: percentage,
-      time: elapsedTime,
-    };
-    const updated = [newRecord, ...examHistory].slice(0, 10);
-    setExamHistory(updated);
-    try {
-      localStorage.setItem("fbb100_history", JSON.stringify(updated));
-    } catch {}
-    setScreen("results");
+    setUserAnswers({ ...userAnswers, [currentQuestionIndex]: optionIndex });
   };
 
   const handleNext = () => {
     if (!showExplanation) {
-      if (userAnswers[currentQuestionIndex] === undefined) return;
+      if (userAnswers[currentQuestionIndex] === undefined) {
+        alert("Por favor, selecione uma opção antes de avançar.");
+        return;
+      }
       setShowExplanation(true);
-    } else if (currentQuestionIndex < examQuestions.length - 1) {
-      setCurrentQuestionIndex((p) => p + 1);
-      setShowExplanation(false);
     } else {
-      finishExam();
+      if (currentQuestionIndex < examQuestions.length - 1) {
+        setCurrentQuestionIndex((p) => p + 1);
+        setShowExplanation(false);
+      } else {
+        finishExam();
+      }
     }
   };
 
-  const results = useMemo(() => {
+  const finishExam = () => {
+    setTimerActive(false);
+    setScreen("results");
+  };
+
+  const handleExit = () => {
+    if (window.confirm("Tem certeza que deseja abandonar este simulado? O seu progresso será perdido.")) {
+      setTimerActive(false);
+      setScreen("home");
+    }
+  };
+
+  const calculateResults = useMemo(() => {
     if (examQuestions.length === 0) return null;
     let correct = 0;
     const missedTopics: Record<string, number> = {};
+
     examQuestions.forEach((q, idx) => {
       if (userAnswers[idx] === q.correctIndex) correct++;
       else missedTopics[q.topic] = (missedTopics[q.topic] || 0) + 1;
     });
+
     const percentage = Math.round((correct / examQuestions.length) * 100);
     const sortedMissedTopics = Object.entries(missedTopics)
       .map(([topic, count]) => ({ topic, count }))
       .sort((a, b) => b.count - a.count);
+
     return { correct, total: examQuestions.length, percentage, sortedMissedTopics };
   }, [examQuestions, userAnswers]);
 
-  if (screen === "home") {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-        <div className="mx-auto max-w-4xl px-4 py-12 sm:py-16">
-          <header className="mb-10 text-center">
-            <div className="mx-auto mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Trophy className="h-8 w-8" />
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Simulador FBB100 | LGPD
-            </h1>
-            <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-              Prepare-se para a certificação Febraban Correspondente Completo. Escolha o tamanho do seu simulado abaixo.
-            </p>
-          </header>
-
-          <section className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
-            <h2 className="mb-5 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              <BookOpen className="h-4 w-4" /> Iniciar simulado
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <ExamButton onClick={() => startExam(10)} icon={<Target className="h-6 w-6" />} label="Rápido" sub="10 Questões" />
-              <ExamButton onClick={() => startExam(30)} icon={<BarChart3 className="h-6 w-6" />} label="Médio" sub="30 Questões" />
-              <ExamButton onClick={() => startExam(60)} icon={<Award className="h-6 w-6" />} label="Completo" sub="60 Questões" highlight />
-            </div>
-          </section>
-
-          {examHistory.length > 0 && (
-            <section className="mt-8 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
-              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                <Clock className="h-4 w-4" /> Seu desempenho (últimas provas)
-              </h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
-                      <th className="py-2 pr-4 font-medium">Data</th>
-                      <th className="py-2 pr-4 font-medium">Tipo</th>
-                      <th className="py-2 pr-4 font-medium">Acertos</th>
-                      <th className="py-2 font-medium">Tempo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {examHistory.map((item) => (
-                      <tr key={item.id} className="border-b border-border/50 last:border-0">
-                        <td className="py-3 pr-4 text-foreground">{item.date}</td>
-                        <td className="py-3 pr-4 text-muted-foreground">{item.type} questões</td>
-                        <td className="py-3 pr-4">
-                          <span
-                            className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                              item.score >= 70
-                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                                : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
-                            }`}
-                          >
-                            {item.score}%
-                          </span>
-                        </td>
-                        <td className="py-3 text-muted-foreground">{formatTime(item.time)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  if (screen === "exam") {
-    const q = examQuestions[currentQuestionIndex];
-    const progress = ((currentQuestionIndex + 1) / examQuestions.length) * 100;
-    const isCorrect = userAnswers[currentQuestionIndex] === q.correctIndex;
-
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-3xl px-4 py-8">
-          <div className="mb-4 flex items-center justify-between text-sm">
-            <span className="font-semibold text-foreground">
-              Questão {currentQuestionIndex + 1} de {examQuestions.length}
-            </span>
-            <span className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 font-mono text-xs text-muted-foreground">
-              <Clock className="h-3.5 w-3.5" /> {formatTime(elapsedTime)}
-            </span>
-          </div>
-
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-medium text-primary">{q.topic}</span>
-          </div>
-          <div className="mb-6 h-2 w-full overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
-          </div>
-
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
-            <h2 className="mb-6 text-lg font-semibold leading-relaxed text-foreground sm:text-xl">
-              {q.text}
-            </h2>
-
-            <div className="space-y-3">
-              {q.options.map((option, idx) => {
-                const isSelected = userAnswers[currentQuestionIndex] === idx;
-                const isCorrectOption = q.correctIndex === idx;
-                let cls =
-                  "border-border bg-background hover:border-primary/40 hover:bg-primary/5 cursor-pointer";
-                if (showExplanation) {
-                  cls = "border-border opacity-60 cursor-default";
-                  if (isCorrectOption)
-                    cls =
-                      "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 font-medium";
-                  else if (isSelected && !isCorrectOption)
-                    cls =
-                      "border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 opacity-100";
-                } else if (isSelected) {
-                  cls = "border-primary bg-primary/10 text-foreground";
-                }
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleSelectOption(idx)}
-                    className={`flex w-full items-start gap-3 rounded-xl border-2 p-4 text-left transition-all ${cls}`}
-                  >
-                    <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center">
-                      {showExplanation && isCorrectOption ? (
-                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                      ) : showExplanation && isSelected && !isCorrectOption ? (
-                        <XCircle className="h-5 w-5 text-rose-600" />
-                      ) : (
-                        <span
-                          className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-                            isSelected ? "border-primary" : "border-muted-foreground/30"
-                          }`}
-                        >
-                          {isSelected && <span className="h-2 w-2 rounded-full bg-primary" />}
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-sm leading-relaxed sm:text-base">{option}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {showExplanation && (
-              <div
-                className={`mt-6 rounded-xl border-l-4 p-4 ${
-                  isCorrect
-                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
-                    : "border-rose-500 bg-rose-50 dark:bg-rose-950/30"
-                }`}
-              >
-                <div
-                  className={`mb-1 flex items-center gap-2 text-sm font-semibold ${
-                    isCorrect ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"
-                  }`}
-                >
-                  {isCorrect ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4" /> Resposta correta!
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-4 w-4" /> Resposta incorreta
-                    </>
-                  )}
-                </div>
-                <p className="text-sm leading-relaxed text-foreground/80">{q.explanation}</p>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-6 flex justify-end">
-            <button
-              type="button"
-              onClick={handleNext}
-              disabled={userAnswers[currentQuestionIndex] === undefined}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {!showExplanation
-                ? "Verificar resposta"
-                : currentQuestionIndex < examQuestions.length - 1
-                ? "Próxima questão"
-                : "Finalizar simulado"}
-              <ArrowRight className="h-4 w-4" />
-            </button>
+  const renderHome = () => (
+    <div className="flex flex-col items-center justify-center py-12 px-4 animate-in fade-in zoom-in duration-500 min-h-[80vh]">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl text-center border-t-4 border-blue-600">
+        <div className="flex justify-center mb-6">
+          <div className="p-4 bg-blue-50 rounded-full">
+            <BookOpen className="w-12 h-12 text-blue-600" />
           </div>
         </div>
-      </div>
-    );
-  }
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Simulador FBB100 | LGPD</h1>
+        <p className="text-gray-600 mb-8">
+          Prepare-se para a certificação Febraban Correspondente Completo. Escolha o tamanho do seu simulado abaixo:
+        </p>
 
-  // results screen
-  if (!results) return null;
-  const { percentage, correct, total, sortedMissedTopics } = results;
-  const isPass = percentage >= 70;
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={() => startExam(10)}
+            className="flex flex-col items-center p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+          >
+            <Target className="w-8 h-8 text-gray-400 group-hover:text-blue-500 mb-3" />
+            <h3 className="font-bold text-lg text-gray-800">Rápido</h3>
+            <p className="text-sm text-gray-500">10 Questões</p>
+          </button>
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <div className="mx-auto max-w-3xl px-4 py-12">
-        <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
-          <div className="text-center">
-            <div
-              className={`mx-auto mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full ${
-                isPass
-                  ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300"
-                  : "bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-300"
-              }`}
-            >
-              {isPass ? <Trophy className="h-10 w-10" /> : <Target className="h-10 w-10" />}
+          <button
+            onClick={() => startExam(30)}
+            className="flex flex-col items-center p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+          >
+            <BarChart3 className="w-8 h-8 text-gray-400 group-hover:text-blue-500 mb-3" />
+            <h3 className="font-bold text-lg text-gray-800">Médio</h3>
+            <p className="text-sm text-gray-500">30 Questões</p>
+          </button>
+
+          <button
+            onClick={() => startExam(60)}
+            className="flex flex-col items-center p-6 border-2 border-blue-200 bg-blue-50 rounded-xl hover:border-blue-600 hover:bg-blue-100 transition-all group relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+              OFICIAL
             </div>
-            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-              {isPass ? "Aprovado!" : "Continue praticando"}
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Você acertou {correct} de {total} questões em {formatTime(elapsedTime)}.
-            </p>
-            <div className={`mt-6 text-6xl font-bold ${isPass ? "text-emerald-600" : "text-rose-600"}`}>
-              {percentage}%
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">Aprovação a partir de 70%</p>
-          </div>
-
-          {sortedMissedTopics.length > 0 && (
-            <div className="mt-8">
-              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                <BarChart3 className="h-4 w-4 text-primary" /> Tópicos para revisar
-              </h3>
-              <div className="space-y-2">
-                {sortedMissedTopics.map((t) => (
-                  <div
-                    key={t.topic}
-                    className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-2.5"
-                  >
-                    <span className="text-sm text-foreground">{t.topic}</span>
-                    <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
-                      {t.count} {t.count === 1 ? "erro" : "erros"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <button
-              type="button"
-              onClick={() => startExam(total)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-            >
-              <RotateCcw className="h-4 w-4" /> Refazer simulado
-            </button>
-            <button
-              type="button"
-              onClick={() => setScreen("home")}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground hover:bg-muted"
-            >
-              Voltar ao início
-            </button>
-          </div>
+            <AwardIcon className="w-8 h-8 text-blue-500 group-hover:text-blue-700 mb-3" />
+            <h3 className="font-bold text-lg text-gray-800">Completo</h3>
+            <p className="text-sm text-gray-600">60 Questões</p>
+          </button>
         </div>
       </div>
     </div>
   );
+
+  const renderExam = () => {
+    const q = examQuestions[currentQuestionIndex];
+    const progress = ((currentQuestionIndex + 1) / examQuestions.length) * 100;
+    const hasAnswered = userAnswers[currentQuestionIndex] !== undefined;
+
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8 animate-in slide-in-from-right-4 duration-300">
+        <div className="mb-8">
+          <div className="flex justify-between items-center text-sm font-medium text-gray-500 mb-2">
+            <span>
+              Questão {currentQuestionIndex + 1} de {examQuestions.length}
+            </span>
+            <span className="text-blue-600 text-right max-w-[60%] truncate" title={q.topic}>
+              {q.topic}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6 relative">
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6 leading-relaxed mt-2">{q.text}</h2>
+
+          <div className="space-y-3">
+            {q.options.map((option, idx) => {
+              const isSelected = userAnswers[currentQuestionIndex] === idx;
+              const isCorrectOption = q.correctIndex === idx;
+
+              let optionStyle = "border-gray-200 bg-white hover:bg-gray-50 text-gray-700 cursor-pointer";
+
+              if (showExplanation) {
+                optionStyle = "border-gray-200 opacity-60 cursor-default";
+                if (isCorrectOption) {
+                  optionStyle =
+                    "border-green-500 bg-green-50 text-green-800 font-medium z-10 relative ring-1 ring-green-500";
+                } else if (isSelected && !isCorrectOption) {
+                  optionStyle = "border-red-500 bg-red-50 text-red-800 opacity-100";
+                }
+              } else if (isSelected) {
+                optionStyle = "border-blue-500 bg-blue-50 text-blue-800 ring-1 ring-blue-500";
+              }
+
+              return (
+                <div
+                  key={idx}
+                  onClick={() => handleSelectOption(idx)}
+                  className={`flex items-start p-4 border-2 rounded-xl transition-all ${optionStyle}`}
+                >
+                  <div className="flex-shrink-0 mt-0.5">
+                    {showExplanation && isCorrectOption ? (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    ) : showExplanation && isSelected && !isCorrectOption ? (
+                      <XCircle className="w-5 h-5 text-red-500" />
+                    ) : (
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          isSelected ? "border-blue-500" : "border-gray-300"
+                        }`}
+                      >
+                        {isSelected && <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />}
+                      </div>
+                    )}
+                  </div>
+                  <span className="ml-3 text-base">{option}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {showExplanation && (
+            <div
+              className={`mt-6 p-4 rounded-xl border ${
+                userAnswers[currentQuestionIndex] === q.correctIndex
+                  ? "bg-green-50 border-green-200"
+                  : "bg-orange-50 border-orange-200"
+              } animate-in fade-in slide-in-from-top-4`}
+            >
+              <h4 className="font-bold flex items-center mb-1 text-gray-800">
+                {userAnswers[currentQuestionIndex] === q.correctIndex ? (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2 text-green-600" /> Resposta Correta!
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-4 h-4 mr-2 text-orange-600" /> Resposta Incorreta
+                  </>
+                )}
+              </h4>
+              <p className="text-gray-700 text-sm leading-relaxed">{q.explanation}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-between items-center pb-8">
+          <button
+            onClick={handleExit}
+            className="flex items-center px-4 py-2 rounded-lg font-medium text-red-500 hover:bg-red-50 transition-colors"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sair do Simulado
+          </button>
+
+          <button
+            onClick={handleNext}
+            disabled={!hasAnswered}
+            className={`flex items-center px-6 py-3 rounded-xl font-bold transition-all ${
+              hasAnswered
+                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            {!showExplanation
+              ? "Verificar Resposta"
+              : currentQuestionIndex < examQuestions.length - 1
+              ? "Próxima Questão"
+              : "Finalizar Simulado"}
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderResults = () => {
+    if (!calculateResults) return null;
+    const { percentage, correct, total, sortedMissedTopics } = calculateResults;
+    const isPass = percentage >= 70;
+
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
+        <div
+          className={`bg-white rounded-2xl p-8 mb-6 shadow-sm border-t-8 text-center ${
+            isPass ? "border-green-500" : "border-red-500"
+          }`}
+        >
+          <div className="inline-flex justify-center items-center w-24 h-24 rounded-full mb-4 bg-gray-50">
+            {isPass ? (
+              <AwardIcon className="w-12 h-12 text-green-500" />
+            ) : (
+              <XCircle className="w-12 h-12 text-red-500" />
+            )}
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            {isPass ? "Parabéns, você foi Aprovado!" : "Ainda não foi dessa vez. Continue estudando!"}
+          </h2>
+          <p className="text-gray-600 text-lg mb-4">
+            Você acertou <strong className="text-gray-900">{correct}</strong> de{" "}
+            <strong className="text-gray-900">{total}</strong> questões.
+          </p>
+
+          <div className="flex items-center justify-center mb-4">
+            <div className="relative w-32 h-32 flex items-center justify-center">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-gray-200"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                />
+                <path
+                  className={isPass ? "text-green-500" : "text-red-500"}
+                  strokeDasharray={`${percentage}, 100`}
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                />
+              </svg>
+              <div className="absolute text-2xl font-bold text-gray-800">{percentage}%</div>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center justify-center text-sm text-gray-500 space-y-1">
+            <div className="flex items-center bg-gray-50 px-3 py-1.5 rounded-full">
+              <Clock className="w-4 h-4 mr-1.5 text-gray-400" />
+              Tempo de Prova: <strong className="ml-1">{formatTime(elapsedTime)}</strong>
+            </div>
+            <p className="mt-2">*Critério de aprovação: 70%</p>
+          </div>
+        </div>
+
+        {sortedMissedTopics.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+              <AlertCircle className="w-6 h-6 mr-2 text-orange-500" />
+              Foco de Estudo: Onde você mais errou
+            </h3>
+            <p className="text-gray-600 mb-6">Revisar estes temas vai aumentar muito suas chances na certificação.</p>
+            <div className="space-y-4">
+              {sortedMissedTopics.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100"
+                >
+                  <span className="font-medium text-gray-700">{item.topic}</span>
+                  <span className="bg-red-100 text-red-700 font-bold px-3 py-1 rounded-full text-sm">
+                    {item.count} erro{item.count > 1 ? "s" : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8 pb-8">
+          <button
+            onClick={() => setScreen("home")}
+            className="flex justify-center items-center px-6 py-3 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 rounded-xl font-bold transition-all shadow-sm"
+          >
+            <RotateCcw className="w-5 h-5 mr-2" /> Voltar ao Início
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 font-sans selection:bg-blue-100 flex flex-col">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div
+            className="flex items-center cursor-pointer"
+            onClick={() => {
+              setScreen("home");
+              setTimerActive(false);
+            }}
+          >
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3 hover:bg-blue-700 transition-colors">
+              <BookOpen className="w-5 h-5 text-white" />
+            </div>
+            <span className="font-bold text-xl text-gray-800 tracking-tight hidden sm:block">FBB100 Prep</span>
+          </div>
+          {screen === "exam" && (
+            <div className="flex items-center space-x-3">
+              <div className="text-sm font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full flex items-center border border-blue-100 shadow-sm">
+                <Clock className="w-4 h-4 mr-1.5" />
+                {formatTime(elapsedTime)}
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <main className="flex-grow">
+        {screen === "home" && renderHome()}
+        {screen === "exam" && renderExam()}
+        {screen === "results" && renderResults()}
+      </main>
+
+      <footer className="w-full bg-white border-t border-gray-200 py-6 mt-auto">
+        <div className="text-center text-gray-400 text-sm font-medium">
+          <a
+            href="https://github.com/lydson"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-blue-600 transition-colors inline-flex items-center"
+          >
+            Made by Lydson
+          </a>
+        </div>
+      </footer>
+    </div>
+  );
 }
 
-function ExamButton({
-  onClick,
-  icon,
-  label,
-  sub,
-  highlight,
-}: {
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-  sub: string;
-  highlight?: boolean;
-}) {
+function AwardIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border-2 p-6 transition-all ${
-        highlight
-          ? "border-primary/40 bg-primary/5 hover:border-primary hover:bg-primary/10"
-          : "border-border bg-background hover:border-primary/40 hover:bg-primary/5"
-      }`}
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      {highlight && (
-        <span className="absolute right-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
-          Oficial
-        </span>
-      )}
-      <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
-        {icon}
-      </span>
-      <span className="text-base font-semibold text-foreground">{label}</span>
-      <span className="text-xs text-muted-foreground">{sub}</span>
-    </button>
+      <circle cx="12" cy="8" r="6" />
+      <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+    </svg>
   );
 }
