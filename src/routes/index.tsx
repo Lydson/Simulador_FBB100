@@ -7,6 +7,7 @@ import {
   BookOpen,
   Target,
   ArrowRight,
+  ArrowLeft,
   RotateCcw,
   BarChart3,
   Clock,
@@ -87,6 +88,12 @@ function App() {
     }
   };
 
+  const handlePrev = () => {
+    if (currentQuestionIndex === 0) return;
+    setCurrentQuestionIndex((p) => p - 1);
+    setShowExplanation(false);
+  };
+
   const finishExam = () => {
     setTimerActive(false);
     setScreen("results");
@@ -119,7 +126,7 @@ function App() {
 
   const renderHome = () => (
     <div className="flex flex-col items-center justify-center py-12 px-4 animate-in fade-in zoom-in duration-500 min-h-[80vh]">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl text-center border-t-4 border-blue-600">
+      <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-2xl text-center border-t-4 border-blue-600">
         <div className="flex justify-center mb-6">
           <div className="p-4 bg-blue-50 rounded-full">
             <BookOpen className="w-12 h-12 text-blue-600" />
@@ -153,9 +160,6 @@ function App() {
             onClick={() => startExam(60)}
             className="flex flex-col items-center p-6 border-2 border-blue-200 bg-blue-50 rounded-xl hover:border-blue-600 hover:bg-blue-100 transition-all group relative overflow-hidden"
           >
-            <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
-              OFICIAL
-            </div>
             <AwardIcon className="w-8 h-8 text-blue-500 group-hover:text-blue-700 mb-3" />
             <h3 className="font-bold text-lg text-gray-800">Completo</h3>
             <p className="text-sm text-gray-600">60 Questões</p>
@@ -177,19 +181,20 @@ function App() {
             <span>
               Questão {currentQuestionIndex + 1} de {examQuestions.length}
             </span>
-            <span className="text-blue-600 text-right max-w-[60%] truncate" title={q.topic}>
+            <span className="text-blue-200 text-right max-w-[60%] truncate" title={q.topic}>
               {q.topic}
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div className="w-full bg-white/10 rounded-full h-2.5">
             <div
-              className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+              className="bg-blue-400 h-2.5 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
+          <div className="text-xs text-blue-200/70 mt-2 sm:hidden">{q.topic}</div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6 relative">
+        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 md:p-8 mb-6 relative">
           <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6 leading-relaxed mt-2">{q.text}</h2>
 
           <div className="space-y-3">
@@ -262,31 +267,46 @@ function App() {
           )}
         </div>
 
-        <div className="flex justify-between items-center pb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pb-8">
           <button
             onClick={handleExit}
-            className="flex items-center px-4 py-2 rounded-lg font-medium text-red-500 hover:bg-red-50 transition-colors"
+            className="flex items-center justify-center px-4 py-2 rounded-lg font-medium text-red-300 hover:text-red-200 hover:bg-white/5 transition-colors order-last sm:order-first"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Sair do Simulado
           </button>
 
-          <button
-            onClick={handleNext}
-            disabled={!hasAnswered}
-            className={`flex items-center px-6 py-3 rounded-xl font-bold transition-all ${
-              hasAnswered
-                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            {!showExplanation
-              ? "Verificar Resposta"
-              : currentQuestionIndex < examQuestions.length - 1
-              ? "Próxima Questão"
-              : "Finalizar Simulado"}
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <button
+              onClick={handlePrev}
+              disabled={currentQuestionIndex === 0}
+              className={`flex items-center justify-center px-5 py-3 rounded-xl font-bold transition-all ${
+                currentQuestionIndex === 0
+                  ? "bg-slate-200 text-slate-400 opacity-50 cursor-not-allowed"
+                  : "bg-slate-200 hover:bg-slate-300 text-slate-700"
+              }`}
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Voltar Questão
+            </button>
+
+            <button
+              onClick={handleNext}
+              disabled={!hasAnswered}
+              className={`flex items-center justify-center px-6 py-3 rounded-xl font-bold transition-all ${
+                hasAnswered
+                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              {!showExplanation
+                ? "Verificar Resposta"
+                : currentQuestionIndex < examQuestions.length - 1
+                ? "Próxima Questão"
+                : "Finalizar Simulado"}
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -300,7 +320,7 @@ function App() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 animate-in fade-in slide-in-from-bottom-8 duration-500">
         <div
-          className={`bg-white rounded-2xl p-8 mb-6 shadow-sm border-t-8 text-center ${
+          className={`bg-white rounded-3xl p-8 mb-6 shadow-2xl border-t-8 text-center ${
             isPass ? "border-green-500" : "border-red-500"
           }`}
         >
@@ -352,7 +372,7 @@ function App() {
         </div>
 
         {sortedMissedTopics.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mb-6">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 md:p-8 mb-6">
             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <AlertCircle className="w-6 h-6 mr-2 text-orange-500" />
               Foco de Estudo: Onde você mais errou
@@ -387,8 +407,8 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans selection:bg-blue-100 flex flex-col">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 font-sans selection:bg-blue-100 flex flex-col">
+      <header className="bg-transparent border-b border-white/10 sticky top-0 z-50 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <div
             className="flex items-center cursor-pointer"
@@ -397,14 +417,14 @@ function App() {
               setTimerActive(false);
             }}
           >
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3 hover:bg-blue-700 transition-colors">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3 hover:bg-blue-500 transition-colors">
               <BookOpen className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-xl text-gray-800 tracking-tight hidden sm:block">FBB100 Prep</span>
+            <span className="font-bold text-xl text-white tracking-tight hidden sm:block">FBB100 Prep</span>
           </div>
           {screen === "exam" && (
             <div className="flex items-center space-x-3">
-              <div className="text-sm font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full flex items-center border border-blue-100 shadow-sm">
+              <div className="text-sm font-bold bg-white/10 text-white px-3 py-1.5 rounded-full flex items-center border border-white/20 shadow-sm backdrop-blur-sm">
                 <Clock className="w-4 h-4 mr-1.5" />
                 {formatTime(elapsedTime)}
               </div>
@@ -419,13 +439,13 @@ function App() {
         {screen === "results" && renderResults()}
       </main>
 
-      <footer className="w-full bg-white border-t border-gray-200 py-6 mt-auto">
-        <div className="text-center text-gray-400 text-sm font-medium">
+      <footer className="w-full bg-transparent border-t border-white/10 py-6 mt-auto">
+        <div className="text-center text-white/50 text-sm font-medium">
           <a
             href="https://github.com/lydson"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-blue-600 transition-colors inline-flex items-center"
+            className="hover:text-blue-300 transition-colors inline-flex items-center"
           >
             Made by Lydson
           </a>
