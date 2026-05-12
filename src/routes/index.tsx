@@ -407,7 +407,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 font-sans selection:bg-blue-100 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-900 to-slate-950 font-sans selection:bg-blue-100 flex flex-col">
       <header className="bg-transparent border-b border-white/10 sticky top-0 z-50 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <div
