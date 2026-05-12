@@ -176,15 +176,12 @@ function App() {
 
     return (
       <div className="max-w-3xl mx-auto px-4 py-8 animate-in slide-in-from-right-4 duration-300">
-        <div className="mb-6">
-          <div className="flex justify-between items-center text-sm font-medium mb-2 gap-3">
-            <span className="text-white/80">
+        <div className="mb-8">
+          <div className="flex justify-between items-center text-sm font-medium text-gray-500 mb-2">
+            <span>
               Questão {currentQuestionIndex + 1} de {examQuestions.length}
             </span>
-            <span
-              className="text-blue-200 text-right max-w-[60%] truncate bg-white/10 px-3 py-1 rounded-full text-xs border border-white/10"
-              title={q.topic}
-            >
+            <span className="text-blue-200 text-right max-w-[60%] truncate" title={q.topic}>
               {q.topic}
             </span>
           </div>
@@ -194,10 +191,11 @@ function App() {
               style={{ width: `${progress}%` }}
             />
           </div>
+          <div className="text-xs text-blue-200/70 mt-2 sm:hidden">{q.topic}</div>
         </div>
 
         <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 md:p-8 mb-6 relative">
-          <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-6 leading-relaxed mt-2">{q.text}</h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6 leading-relaxed mt-2">{q.text}</h2>
 
           <div className="space-y-3">
             {q.options.map((option, idx) => {
@@ -250,21 +248,17 @@ function App() {
               className={`mt-6 p-4 rounded-xl border ${
                 userAnswers[currentQuestionIndex] === q.correctIndex
                   ? "bg-green-50 border-green-200"
-                  : "bg-red-50 border-red-200"
+                  : "bg-orange-50 border-orange-200"
               } animate-in fade-in slide-in-from-top-4`}
             >
-              <h4
-                className={`font-bold flex items-center mb-1 ${
-                  userAnswers[currentQuestionIndex] === q.correctIndex ? "text-green-700" : "text-red-700"
-                }`}
-              >
+              <h4 className="font-bold flex items-center mb-1 text-gray-800">
                 {userAnswers[currentQuestionIndex] === q.correctIndex ? (
                   <>
                     <CheckCircle className="w-4 h-4 mr-2 text-green-600" /> Resposta Correta!
                   </>
                 ) : (
                   <>
-                    <AlertCircle className="w-4 h-4 mr-2 text-red-600" /> Resposta Incorreta
+                    <AlertCircle className="w-4 h-4 mr-2 text-orange-600" /> Resposta Incorreta
                   </>
                 )}
               </h4>
@@ -413,8 +407,8 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 font-sans selection:bg-blue-100 flex flex-col">
-      <header className="bg-transparent border-b border-slate-700/50 sticky top-0 z-50 backdrop-blur-md">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 font-sans selection:bg-blue-100 flex flex-col">
+      <header className="bg-transparent border-b border-white/10 sticky top-0 z-50 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <div
             className="flex items-center cursor-pointer"
