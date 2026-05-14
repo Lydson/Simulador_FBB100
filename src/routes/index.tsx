@@ -472,3 +472,36 @@ function AwardIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+function BarsIcon({ level, className }: { level: 1 | 2 | 3; className?: string }) {
+  const bars =
+    level === 1
+      ? [{ x: 4, h: 6 }]
+      : level === 2
+      ? [
+          { x: 4, h: 8 },
+          { x: 11, h: 12 },
+        ]
+      : [
+          { x: 3, h: 10 },
+          { x: 10, h: 14 },
+          { x: 17, h: 18 },
+        ];
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <line x1="2" y1="22" x2="22" y2="22" />
+      {bars.map((b, i) => (
+        <rect key={i} x={b.x} y={22 - b.h} width="4" height={b.h} rx="0.5" />
+      ))}
+    </svg>
+  );
+}
