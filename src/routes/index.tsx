@@ -55,7 +55,14 @@ function App() {
   }, [timerActive, screen]);
 
   const startExam = (count: number) => {
-    setExamQuestions(shuffleArray(questionBank).slice(0, count));
+    const selected = shuffleArray(questionBank).slice(0, count);
+    const withShuffledOptions = selected.map((q) => {
+      const correctText = q.options[q.correctIndex];
+      const shuffledOptions = shuffleArray(q.options);
+      const newCorrectIndex = shuffledOptions.indexOf(correctText);
+      return { ...q, options: shuffledOptions, correctIndex: newCorrectIndex };
+    });
+    setExamQuestions(withShuffledOptions);
     setCurrentQuestionIndex(0);
     setUserAnswers({});
     setShowExplanation(false);
