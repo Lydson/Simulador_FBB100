@@ -2,6 +2,12 @@
 
 Um simulador web interativo e responsivo desenvolvido para auxiliar nos estudos da certificação **Febraban FBB100 (Correspondente Completo)** e na compreensão da **LGPD (Lei Geral de Proteção de Dados)** no setor financeiro.
 
+## 📸 Interface do Aplicativo
+
+<img width="1430" height="934" alt="fbb100_1_lydson" src="https://github.com/user-attachments/assets/68cd760d-f087-48b4-bde8-8fea4d73f6f4" />
+
+<img width="1462" height="944" alt="fbb100_2_lydson" src="https://github.com/user-attachments/assets/5d4a2579-c7d9-4577-b7c6-335b3e27f610" />
+
 ## 🚀 Funcionalidades
 
 - **3 Modos de Simulado:**
