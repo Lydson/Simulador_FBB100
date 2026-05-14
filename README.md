@@ -6,9 +6,9 @@ Um simulador web interativo e responsivo desenvolvido para auxiliar nos estudos 
 
 <img width="1430" height="934" alt="fbb100_1_lydson" src="https://github.com/user-attachments/assets/68cd760d-f087-48b4-bde8-8fea4d73f6f4" />
 
-<img width="1462" height="944" alt="fbb100_2_lydson" src="https://github.com/user-attachments/assets/5d4a2579-c7d9-4577-b7c6-335b3e27f610" />
-
 ## 🚀 Funcionalidades
+  
+<img width="1462" height="944" alt="fbb100_2_lydson" src="https://github.com/user-attachments/assets/5d4a2579-c7d9-4577-b7c6-335b3e27f610" />
 
 - **3 Modos de Simulado:**
   - **Rápido:** 10 questões para uma revisão ágil.
@@ -23,6 +23,9 @@ Um simulador web interativo e responsivo desenvolvido para auxiliar nos estudos 
   - **Navegação Flexível:** Botões para avançar, voltar ou sair do simulado a qualquer momento.
 
 - **Análise de Desempenho:**
+
+<img width="1163" height="989" alt="fbb100_3_lydson" src="https://github.com/user-attachments/assets/b07715c9-e790-4b13-8b71-95a598f9ee83" />
+
   - Cronômetro em tempo real para controle de tempo de prova.
   - Cálculo de porcentagem de acertos (Corte de aprovação: 70%).
   - **Diagnóstico de Erros:** Lista automática dos temas que precisam de mais atenção com base nos erros cometidos.
