@@ -4,7 +4,6 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  BookOpen,
   ArrowRight,
   ArrowLeft,
   RotateCcw,
