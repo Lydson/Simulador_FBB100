@@ -5,15 +5,14 @@ import {
   XCircle,
   AlertCircle,
   BookOpen,
-  Target,
   ArrowRight,
   ArrowLeft,
   RotateCcw,
-  BarChart3,
   Clock,
   LogOut,
 } from "lucide-react";
 import { questionBank, type Question } from "@/data/questions";
+import studyIcon from "@/assets/study-icon.png";
 
 export const Route = createFileRoute("/")({
   component: App,
@@ -128,9 +127,7 @@ function App() {
     <div className="flex flex-col items-center justify-center py-12 px-4 animate-in fade-in zoom-in duration-500 min-h-[80vh]">
       <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-2xl text-center border-t-4 border-blue-600">
         <div className="flex justify-center mb-6">
-          <div className="p-4 bg-blue-50 rounded-full">
-            <BookOpen className="w-12 h-12 text-blue-600" />
-          </div>
+          <img src={studyIcon} alt="FBB100 Prep" className="w-20 h-20 object-contain" />
         </div>
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Simulador FBB100 | LGPD</h1>
         <p className="text-gray-600 mb-8">
@@ -142,7 +139,7 @@ function App() {
             onClick={() => startExam(10)}
             className="flex flex-col items-center p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
           >
-            <Target className="w-8 h-8 text-gray-400 group-hover:text-blue-500 mb-3" />
+            <BarsIcon level={1} className="w-8 h-8 text-gray-400 group-hover:text-blue-500 mb-3" />
             <h3 className="font-bold text-lg text-gray-800">Rápido</h3>
             <p className="text-sm text-gray-500">10 Questões</p>
           </button>
@@ -151,7 +148,7 @@ function App() {
             onClick={() => startExam(30)}
             className="flex flex-col items-center p-6 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
           >
-            <BarChart3 className="w-8 h-8 text-gray-400 group-hover:text-blue-500 mb-3" />
+            <BarsIcon level={2} className="w-8 h-8 text-gray-400 group-hover:text-blue-500 mb-3" />
             <h3 className="font-bold text-lg text-gray-800">Médio</h3>
             <p className="text-sm text-gray-500">30 Questões</p>
           </button>
@@ -160,11 +157,15 @@ function App() {
             onClick={() => startExam(60)}
             className="flex flex-col items-center p-6 border-2 border-blue-200 bg-blue-50 rounded-xl hover:border-blue-600 hover:bg-blue-100 transition-all group relative overflow-hidden"
           >
-            <AwardIcon className="w-8 h-8 text-blue-500 group-hover:text-blue-700 mb-3" />
+            <BarsIcon level={3} className="w-8 h-8 text-gray-400 group-hover:text-blue-500 mb-3" />
             <h3 className="font-bold text-lg text-gray-800">Completo</h3>
             <p className="text-sm text-gray-600">60 Questões</p>
           </button>
         </div>
+
+        <p className="text-xs text-slate-300 mt-8 leading-relaxed">
+          Este simulador é um hub de estudo independente para certificações e não possui vínculo oficial com as instituições.
+        </p>
       </div>
     </div>
   );
@@ -177,32 +178,32 @@ function App() {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8 animate-in slide-in-from-right-4 duration-300">
         <div className="mb-8">
-          <div className="flex justify-between items-center text-sm font-medium text-gray-500 mb-2">
+          <div className="flex justify-between items-center text-sm font-medium text-slate-500 mb-2">
             <span>
               Questão {currentQuestionIndex + 1} de {examQuestions.length}
             </span>
-            <span className="text-blue-200 text-right max-w-[60%] truncate" title={q.topic}>
+            <span className="text-slate-500 text-right max-w-[60%] truncate" title={q.topic}>
               {q.topic}
             </span>
           </div>
-          <div className="w-full bg-white/10 rounded-full h-2.5">
+          <div className="w-full bg-slate-200/30 rounded-full h-2.5">
             <div
-              className="bg-blue-400 h-2.5 rounded-full transition-all duration-500"
+              className="bg-slate-400 h-2.5 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="text-xs text-blue-200/70 mt-2 sm:hidden">{q.topic}</div>
+          <div className="text-xs text-slate-500 mt-2 sm:hidden">{q.topic}</div>
         </div>
 
         <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 md:p-8 mb-6 relative">
-          <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6 leading-relaxed mt-2">{q.text}</h2>
+          <h2 className="text-lg md:text-xl font-semibold text-slate-500 mb-6 leading-relaxed mt-2">{q.text}</h2>
 
           <div className="space-y-3">
             {q.options.map((option, idx) => {
               const isSelected = userAnswers[currentQuestionIndex] === idx;
               const isCorrectOption = q.correctIndex === idx;
 
-              let optionStyle = "border-gray-200 bg-white hover:bg-gray-50 text-gray-700 cursor-pointer";
+              let optionStyle = "border-gray-200 bg-white hover:bg-gray-50 text-slate-500 cursor-pointer";
 
               if (showExplanation) {
                 optionStyle = "border-gray-200 opacity-60 cursor-default";
@@ -248,21 +249,21 @@ function App() {
               className={`mt-6 p-4 rounded-xl border ${
                 userAnswers[currentQuestionIndex] === q.correctIndex
                   ? "bg-green-50 border-green-200"
-                  : "bg-orange-50 border-orange-200"
+                  : "bg-red-50 border-red-200"
               } animate-in fade-in slide-in-from-top-4`}
             >
-              <h4 className="font-bold flex items-center mb-1 text-gray-800">
+              <h4 className="font-bold flex items-center mb-1 text-slate-600">
                 {userAnswers[currentQuestionIndex] === q.correctIndex ? (
                   <>
                     <CheckCircle className="w-4 h-4 mr-2 text-green-600" /> Resposta Correta!
                   </>
                 ) : (
                   <>
-                    <AlertCircle className="w-4 h-4 mr-2 text-orange-600" /> Resposta Incorreta
+                    <AlertCircle className="w-4 h-4 mr-2 text-red-600" /> Resposta Incorreta
                   </>
                 )}
               </h4>
-              <p className="text-gray-700 text-sm leading-relaxed">{q.explanation}</p>
+              <p className="text-slate-500 text-sm leading-relaxed">{q.explanation}</p>
             </div>
           )}
         </div>
@@ -270,7 +271,7 @@ function App() {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pb-8">
           <button
             onClick={handleExit}
-            className="flex items-center justify-center px-4 py-2 rounded-lg font-medium text-red-300 hover:text-red-200 hover:bg-white/5 transition-colors order-last sm:order-first"
+            className="flex items-center justify-center px-4 py-2 rounded-lg font-medium text-slate-400 hover:text-slate-300 hover:bg-white/5 transition-colors order-last sm:order-first"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Sair do Simulado
@@ -417,9 +418,7 @@ function App() {
               setTimerActive(false);
             }}
           >
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3 hover:bg-blue-500 transition-colors">
-              <BookOpen className="w-5 h-5 text-white" />
-            </div>
+            <img src={studyIcon} alt="" className="w-9 h-9 object-contain mr-3" />
             <span className="font-bold text-xl text-white tracking-tight hidden sm:block">FBB100 Prep</span>
           </div>
           {screen === "exam" && (
