@@ -34,6 +34,7 @@ Um simulador web interativo e responsivo desenvolvido para auxiliar nos estudos 
 
 ## 🛠️ Tecnologias Utilizadas
 
+- Claude, Gemini, NotebookLM, Lovable - Código, double check nas questões e design.
 - [React.js](https://reactjs.org/) - Biblioteca para construção da interface.
 - [Tailwind CSS](https://tailwindcss.com/) - Framework para estilização e responsividade.
 - [Lucide-react](https://lucide.dev/) - Biblioteca de ícones.
@@ -85,6 +86,6 @@ npm run deploy
 
 ## ✒️ Autor
 
-Desenvolvido com 💙 por **Lydson San Miguel**.
+Desenvolvido por **Lydson San Miguel**.
 
 *Este projeto possui fins estritamente educacionais e de auxílio ao estudo para certificações profissionais.*
